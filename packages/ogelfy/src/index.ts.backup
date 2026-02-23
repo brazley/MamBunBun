@@ -1,0 +1,224 @@
+import type { Server } from 'bun';
+import { Router } from './router';
+import type { RouteHandler, OgelfyOptions, OgelfyPlugin, RouteContext } from './types';
+import {
+  ErrorHandling,
+  httpErrors,
+  HttpError,
+  ValidationError,
+  type ErrorHandler,
+  type NotFoundHandler
+} from './error-handler';
+import { Testing } from './testing';
+import { ContentTypeParser } from './content-parser';
+import { Serializer } from './serializer';
+
+export class Ogelfy {
+  private router: Router;
+  private plugins: OgelfyPlugin[] = [];
+  private server?: Server;
+  private errorHandling: ErrorHandling;
+  private testing: Testing;
+  private contentParser: ContentTypeParser;
+  private serializer: Serializer;
+
+  /**
+   * HTTP error factory methods
+   */
+  public httpErrors = httpErrors;
+
+  constructor(options?: OgelfyOptions) {
+    this.router = new Router();
+    this.errorHandling = new ErrorHandling();
+    this.testing = new Testing(this.router);
+    this.contentParser = new ContentTypeParser();
+    this.serializer = new Serializer();
+  }
+
+  /**
+   * Add a custom content-type parser
+   */
+  addContentTypeParser(contentType: string, parser: (req: Request) => Promise<any>): void {
+    this.contentParser.add(contentType, parser);
+  }
+
+  /**
+   * Remove a content-type parser
+   */
+  removeContentTypeParser(contentType: string): boolean {
+    return this.contentParser.remove(contentType);
+  }
+
+  get(path: string, handler: RouteHandler) {
+    this.router.add('GET', path, handler);
+  }
+
+  post(path: string, handler: RouteHandler) {
+    this.router.add('POST', path, handler);
+  }
+
+  put(path: string, handler: RouteHandler) {
+    this.router.add('PUT', path, handler);
+  }
+
+  delete(path: string, handler: RouteHandler) {
+    this.router.add('DELETE', path, handler);
+  }
+
+  register(plugin: OgelfyPlugin, options?: any) {
+    this.plugins.push(plugin);
+  }
+
+  /**
+   * Set custom error handler
+   */
+  setErrorHandler(handler: ErrorHandler): void {
+    this.errorHandling.setErrorHandler(handler);
+  }
+
+  /**
+   * Set custom 404 handler
+   */
+  setNotFoundHandler(handler: NotFoundHandler): void {
+    this.errorHandling.setNotFoundHandler(handler);
+  }
+
+  /**
+   * Inject request for testing (no HTTP server needed)
+   */
+  async inject(options: any) {
+    return this.testing.inject(options);
+  }
+
+  async listen(options: { port: number; hostname?: string }): Promise<Server> {
+    this.server = Bun.serve({
+      port: options.port,
+      hostname: options.hostname || 'localhost',
+      fetch: async (req) => {
+        const url = new URL(req.url);
+        const route = this.router.find(req.method, url.pathname);
+
+        if (!route) {
+          return this.errorHandling.handleNotFound(req);
+        }
+
+        try {
+          // Parse query parameters
+          const query: Record<string, string> = {};
+          url.searchParams.forEach((value, key) => {
+            query[key] = value;
+          });
+
+          // Parse request body for non-GET/HEAD requests
+          let body: any = null;
+          if (req.method !== 'GET' && req.method !== 'HEAD') {
+            try {
+              body = await this.contentParser.parse(req);
+            } catch (error) {
+              // Content parsing error - return 400 Bad Request
+              return new Response(
+                JSON.stringify({
+                  error: 'Bad Request',
+                  message: error instanceof Error ? error.message : String(error)
+                }),
+                {
+                  status: 400,
+                  headers: { 'Content-Type': 'application/json' }
+                }
+              );
+            }
+          }
+
+          // Create route context
+          const context: RouteContext = {
+            params: route.params,
+            query,
+            body
+          };
+
+          // Attach context to request for backward compatibility
+          (req as any).params = route.params;
+          (req as any).query = query;
+          (req as any).body = body;
+
+          // Execute handler with context
+          const result = await route.handler(req, context);
+
+          // If handler returns Response, use it directly
+          if (result instanceof Response) {
+            return result;
+          }
+
+          // Serialize response using fast serialization
+          const responseBody = typeof result === 'string'
+            ? result
+            : this.serializer.serialize(result);
+
+          return new Response(responseBody, {
+            headers: { 'Content-Type': 'application/json' }
+          });
+        } catch (error) {
+          return this.errorHandling.handleError(error as Error, req);
+        }
+      }
+    });
+
+    return this.server;
+  }
+
+  async close() {
+    this.server?.stop();
+  }
+}
+
+// Export error handling utilities
+export {
+  HttpError,
+  ValidationError,
+  httpErrors,
+  type ErrorHandler,
+  type NotFoundHandler,
+  createErrorResponse,
+  assert,
+  errorBoundary
+} from './error-handler';
+
+// Export testing utilities
+export {
+  Testing,
+  type InjectOptions,
+  type InjectResponse,
+  testHelpers
+} from './testing';
+
+// Export content parsing
+export {
+  ContentTypeParser,
+  contentParser,
+  type ContentParser,
+  type ParsedMultipart
+} from './content-parser';
+
+// Export serialization
+export {
+  Serializer,
+  serializer,
+  createRouteSchema,
+  Schemas,
+  type SerializerSchema,
+  type RouteSchema as SerializerRouteSchema
+} from './serializer';
+
+// Export existing modules
+export { Router } from './router';
+export type {
+  RouteHandler,
+  OgelfyOptions,
+  OgelfyPlugin,
+  RouteContext,
+  RouteSchema,
+  RouteOptions,
+  RouteConstraints,
+  RouteChain
+} from './types';
+export { validate } from './validation';

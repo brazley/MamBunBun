@@ -1,0 +1,15 @@
+[build]
+builder = "railpack"
+buildCommand = "bun install"
+
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+
+# Zero-downtime deployment for SSE streaming
+overlapSeconds = 30
+drainingSeconds = 60
+
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+startCommand = "bun run src/api/server.ts"
