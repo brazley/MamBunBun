@@ -208,6 +208,73 @@ export class Reply {
   }
 
   /**
+   * Send a generic chunked streaming response.
+   *
+   * Accepts an AsyncIterable or ReadableStream and pipes it directly into a
+   * streaming Response body. Useful for large JSON exports, file downloads, or
+   * any chunked transfer that is NOT Server-Sent Events (use reply.sse() for SSE).
+   *
+   * Returns the Response — the handler should return the result of reply.stream().
+   *
+   * @example
+   * app.get('/export', async (req, reply) => {
+   *   async function* generate() {
+   *     yield '["row1"';
+   *     yield ',"row2"';
+   *     yield ']';
+   *   }
+   *   return reply.stream(generate(), { contentType: 'application/json' });
+   * });
+   */
+  stream(
+    source: AsyncIterable<string | Uint8Array> | ReadableStream<string | Uint8Array>,
+    opts?: { contentType?: string; status?: number }
+  ): Response {
+    const status = opts?.status ?? 200;
+    const contentType = opts?.contentType ?? 'application/octet-stream';
+    const encoder = new TextEncoder();
+
+    const readable = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        try {
+          if (source instanceof ReadableStream) {
+            const reader = source.getReader();
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              if (typeof value === 'string') {
+                controller.enqueue(encoder.encode(value));
+              } else {
+                controller.enqueue(value);
+              }
+            }
+          } else {
+            for await (const chunk of source) {
+              if (typeof chunk === 'string') {
+                controller.enqueue(encoder.encode(chunk));
+              } else {
+                controller.enqueue(chunk);
+              }
+            }
+          }
+        } catch (err) {
+          controller.error(err);
+        } finally {
+          controller.close();
+        }
+      },
+    });
+
+    const response = new Response(readable, {
+      status,
+      headers: { 'Content-Type': contentType },
+    });
+
+    this.setResponse(response);
+    return response;
+  }
+
+  /**
    * Set the Content-Type header
    */
   type(contentType: string): this {

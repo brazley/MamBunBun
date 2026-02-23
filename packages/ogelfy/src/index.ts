@@ -1171,3 +1171,7 @@ export { validate } from './validation';
 
 // AI-native primitives
 export * from './ai/index';
+
+// Built-in plugins
+export { corsPlugin, type CorsOptions } from './cors';
+export { compressPlugin, type CompressOptions } from './compress';
