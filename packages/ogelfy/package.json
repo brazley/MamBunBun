@@ -14,7 +14,6 @@
     "kong:status": "./scripts/kong-admin.sh status",
     "kong:health": "./scripts/kong-admin.sh health",
     "kong:test": "./scripts/kong-admin.sh test",
-    "deploy:railway": "./scripts/deploy-kong.sh",
     "bench": "./benchmarks/run.sh",
     "bench:test": "bun test benchmarks"
   },

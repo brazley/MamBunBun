@@ -1,7 +1,7 @@
 # ================================
 # MamBunBun - Bun API Gateway
 # ================================
-FROM oven/bun:1.3.6-slim AS build
+FROM oven/bun:1.3.11-slim AS build
 
 WORKDIR /app
 
@@ -17,7 +17,7 @@ COPY tsconfig.json ./
 # ================================
 # Run image (same base - no compile step needed)
 # ================================
-FROM oven/bun:1.3.6-slim
+FROM oven/bun:1.3.11-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 

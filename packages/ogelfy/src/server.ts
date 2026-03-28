@@ -1,7 +1,5 @@
 /**
  * Production Ogelfy Server
- *
- * Optimized for Railway deployment with Kong load balancing
  */
 
 import { Ogelfy } from './index';
@@ -11,8 +9,8 @@ const app = new Ogelfy();
 // Environment configuration
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const NODE_ENV = process.env.NODE_ENV || 'development';
-const SERVICE_NAME = process.env.RAILWAY_SERVICE_NAME || 'ogelfy';
-const REPLICA_ID = process.env.RAILWAY_REPLICA_ID || '1';
+const SERVICE_NAME = process.env.SERVICE_NAME || 'ogelfy';
+const REPLICA_ID = process.env.REPLICA_ID || '1';
 
 console.log(`🚀 Starting ${SERVICE_NAME} (replica ${REPLICA_ID})`);
 console.log(`   Environment: ${NODE_ENV}`);

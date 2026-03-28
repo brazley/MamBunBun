@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ZKEB API Server Test Script
+# MamBunBun API Test Script
 # Tests all endpoints and middleware functionality
 
 set -e
@@ -9,7 +9,7 @@ API_URL="http://localhost:3000"
 JWT_SECRET="test-secret-key-for-development-minimum-32-characters-long"
 
 echo "========================================"
-echo "ZKEB API Server Test Suite"
+echo "MamBunBun API Test Suite"
 echo "========================================"
 echo ""
 
@@ -100,5 +100,5 @@ echo ""
 echo "Next steps:"
 echo "  - Add more API endpoints"
 echo "  - Test rate limiting (requires multiple IPs)"
-echo "  - Deploy to Railway"
+echo "  - Deploy to production"
 echo "  - Add OpenAPI docs"
