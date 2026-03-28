@@ -6,8 +6,6 @@
   "scripts": {
     "test": "bun test",
     "build": "bun build ./src/index.ts --outdir ./dist --target bun",
-    "dev": "bun run src/server.ts",
-    "start": "bun run src/server.ts",
     "docker:dev": "docker-compose up -d",
     "docker:logs": "docker-compose logs -f",
     "docker:stop": "docker-compose down",

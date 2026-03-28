@@ -1,5 +1,5 @@
 # ================================
-# MamBunBun - Bun API Gateway
+# MamBunBun - Bun Server Template
 # ================================
 FROM oven/bun:1.3.11-slim AS build
 

@@ -34,11 +34,16 @@ Server starts at `http://localhost:3000`. Hit `/health` to verify.
 
 ```
 src/
-  api/server.ts          — App entry point
+  api/server.ts          — App entry point (opt-in pattern)
   config/env.ts          — Environment variables (Zod validated)
-  routes/health.ts       — GET /health
-  middleware/auth.ts      — JWT auth middleware
-  clients/database.ts    — pg pool client
+  routes/
+    health.ts            — GET /health (always active)
+    example.ts           — GET/POST examples (always active)
+  plugins/               — Ogelfy plugins (opt-in via app.register)
+    auth.ts              — JWT auth plugin
+    rate-limit.ts        — Rate limiter plugin
+  clients/
+    database.ts          — pg pool client (opt-in)
 
 packages/
   ogelfy/src/            — Ogelfy framework source

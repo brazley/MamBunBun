@@ -8,3 +8,9 @@ dist/
 .cache/
 coverage/
 .claude/
+
+# Generated declaration files in Ogelfy
+packages/ogelfy/src/*.d.ts
+packages/ogelfy/src/*.d.ts.map
+packages/ogelfy/src/ai/*.d.ts
+packages/ogelfy/src/ai/*.d.ts.map

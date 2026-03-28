@@ -20,24 +20,33 @@ This is the **MamBunBun template** — a clean, generic Bun server template buil
 
 ### Key Directories
 ```
-packages/ogelfy/src/     — Ogelfy framework source
-  index.ts               — Main Ogelfy class
-  hooks.ts               — Reply class + HookManager lifecycle
-  router.ts              — find-my-way radix trie router
-  request.ts             — OgelfyRequest (Fastify-shaped)
-  types.ts               — RouteHandler, RouteContext, etc.
-  ai/                    — AI-native primitives
-    sse.ts               — SSE streaming (reply.sse())
-    errors.ts            — AIError hierarchy
-    idempotency.ts       — Idempotency plugin
-    token-budget.ts      — Token budget middleware
+packages/ogelfy/src/          — Ogelfy framework source
+  index.ts                    — Main Ogelfy class + plugin system
+  hooks.ts                    — Reply class + HookManager lifecycle
+  router.ts                   — find-my-way radix trie router
+  request.ts                  — OgelfyRequest (Fastify-shaped)
+  types.ts                    — RouteHandler, RouteContext, etc.
+  cors.ts                     — CORS plugin
+  compress.ts                 — Compression plugin
+  ai/                         — AI-native primitives
+    sse.ts                    — SSE streaming (reply.sse())
+    errors.ts                 — AIError hierarchy
+    idempotency.ts            — Idempotency plugin
+    token-budget.ts           — Token budget middleware
+
+packages/quik-json-stringify/ — Compiled JSON serializer (used by Ogelfy router)
 
 src/
-  api/server.ts          — App entry point
-  config/env.ts          — Environment variables
-  routes/health.ts       — GET /health
-  middleware/auth.ts     — JWT auth middleware
-  clients/database.ts    — pg pool client
+  api/server.ts               — App entry point (opt-in pattern)
+  config/env.ts               — Zod-validated environment variables
+  routes/
+    health.ts                 — GET /health (always active)
+    example.ts                — GET/POST examples (always active)
+  plugins/                    — Ogelfy plugins (opt-in via app.register)
+    auth.ts                   — JWT auth plugin
+    rate-limit.ts             — Rate limiter plugin
+  clients/
+    database.ts               — pg pool client (opt-in)
 ```
 
 ## Development Commands
